@@ -38,9 +38,8 @@ class SerialLoggerHandler:
         import time
 
         print("Detecting Arduino serial port...")
-        available_ports = list_ports.comports()
-        for port in available_ports:
-            port_name = port.device
+        available_ports = self.listPorts()  # Use the filtered list
+        for port_name in available_ports:
             self.logger.debug(f"Testing port: {port_name}")
             try:
                 with serial.Serial(port_name, self.baud_rate, timeout=self.timeout) as test_serial:
@@ -56,6 +55,27 @@ class SerialLoggerHandler:
                 self.logger.debug(f"Could not open port {port_name}: {e}")
         print("No Arduino detected.")
         return None
+
+    def ignorePorts(self, patterns):
+        """
+        Configure patterns for ports to exclude.
+        :param patterns: List of fnmatch patterns (e.g., ['/dev/ttyS*']).
+        """
+        self.excluded_patterns = patterns
+        self.logger.debug(f"Excluded port patterns: {self.excluded_patterns}")
+
+    def listPorts(self):
+        """
+        List all available serial ports excluding ignored ones.
+        :return: List of non-ignored port names.
+        """
+        available_ports = list_ports.comports()
+        non_ignored_ports = [
+            port.device for port in available_ports
+            if not any(fnmatch.fnmatch(port.device, pattern) for pattern in self.excluded_patterns)
+        ]
+        self.logger.debug(f"Available ports: {non_ignored_ports}")
+        return non_ignored_ports
 
     def setBaudRate(self, baud_rate):
         """Set the baud rate."""
