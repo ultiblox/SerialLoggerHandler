@@ -19,6 +19,7 @@ class SerialLoggerHandler:
         self.is_listening = False
         self.data_handler = None
         self.debug = debug
+        self.excluded_patterns = ["/dev/ttyS*"] 
 
         # Configure logging
         log_level = logging.DEBUG if self.debug else logging.CRITICAL
